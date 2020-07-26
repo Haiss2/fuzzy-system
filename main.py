@@ -16,7 +16,7 @@ Cluster_center = []
 def step1():
     o = [0 for i in range(k_mean)]
     c = [i*100/k_mean for i in range(k_mean)]
-    u  = [ o.copy() for i in range(150)]
+    u  = [ o.copy() for i in range(data_size)]
     return o, c, u
 
 def step2(x, c, u):
@@ -89,7 +89,6 @@ def add_rule(rule):
             loai = True
             if r[num_properties] < rule[num_properties]:
                 r = rule
-
     if not loai:
         Rule_set.append(rule)
 
@@ -122,7 +121,7 @@ def do_thuoc_set(x, s, C):
 def predict(t):
     rule_burn = [min( [do_thuoc_set(float(t[i+1]), rule[i+1], Cluster_center[i]) for i in range(num_properties)]) for rule in Rule_set]
     id = rule_burn.index(max(rule_burn))
-    return Rule_set[id][0] ==t[0]
+    return Rule_set[id][0] == t[0]
 
 test_path = 'TestData.csv'
 test = read_file(test_path)
