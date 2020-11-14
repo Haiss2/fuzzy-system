@@ -13,6 +13,14 @@ e_rule = cf.e_rule
 
 Cluster_center = []
 
+percent = [0,0,0,0,0,0]
+for i in data:
+    percent[int(i[0])-1] += 1
+a = [(i/sum(percent))**0.9 for i in percent]
+b = [int(i/sum(a)*400) for i in a]
+print(a)
+print(b)
+
 def step1():
     o = [0 for i in range(k_mean)]
     c = [i*100/k_mean for i in range(k_mean)]
@@ -52,6 +60,9 @@ for x in range(num_properties):
 print('\n--------------------------')    
 print("Phân cụm mờ trong {:.2f} s".format(time.time() - now))
 print('--------------------------')
+g = open("Cluster.csv", "w")
+for i in Cluster_center:
+    g.write(",".join(str(j) for j in i) + "\n")
 
 def do_thuoc(x, c1, c2, c3):
     if x >= c3 or x <= c1: 
@@ -104,11 +115,16 @@ for d in data:
                 break
             s.append(burn_set[0])
             u_ *= burn_set[1]
-        if u_ > e_rule:
+        if u_ > e_rule and 0.05 > u_:
             add_rule([d[0]] + s + [u_])
-            
+      
+
 print("Tạo "+ str(len(Rule_set)) + " luật trong {:.2f}".format(time.time() - now) + 's')    
 print('--------------------------')            
+f = open("Rule2.csv", "w")
+for i in Rule_set:
+    f.write(",".join(str(j) for j in i) + "\n")
+
 
 # predict
 def do_thuoc_set(x, s, C):
