@@ -1,5 +1,5 @@
 # data
-train_path = 'data/FullData.csv' #TrainingData
+train_path = 'data/TrainingData.csv'
 test_path = 'data/TestData.csv'
 full_path = 'data/FullData.csv'
 clusters_path = 'export/Clusters.csv'

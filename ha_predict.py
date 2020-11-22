@@ -64,10 +64,15 @@ if __name__ == "__main__":
     clusters = csv.read_file(cf.clusters_path, 'float')
     rules = csv.read_file(cf.rule_path, 'float')
     edit = csv.read_file(cf.editFmc_path, 'float')
-
     fmc = csv.read_file(cf.fmc_path, 'float')
+
     x = Predict(data, clusters, rules, fmc)
-    print('\n')
+    print('\n  Train Data >>')
+    correct = x.num_corrects()
+
+    testData = csv.read_file(cf.test_path, 'float')
+    x = Predict(testData, clusters, rules, fmc)
+    print('\n  Test Data >>')
     correct = x.num_corrects()
     print('\n')
 
