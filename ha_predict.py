@@ -1,6 +1,6 @@
 import config as cf
-import csv_processor as csv
-from ha_tree import HaTree
+import code.csv_processor as csv
+from code.ha_tree import HaTree
 import time
 
 
@@ -11,21 +11,22 @@ class Predict:
         self.rules = rule
         self.num_properties = len(self.data[0]) - 1
         self.fmc = fmc
+        self.ha_trees = [[HaTree(fmc_) for fmc_ in line ] for line in self.fmc]
 
-    def do_thuoc(self, x, c1, c2, c3, cluterIndex, attibuteIndex):
+    def do_thuoc(self, x, c1, c2, c3, cluterIndex, attributeIndex):
         if x >= c3 or x <= c1: 
             return 0
         if c1 < x and x <= c2:
-            return HaTree(self.fmc[attibuteIndex][2*cluterIndex]).getIndex((x - c1) / (c2 - c1))
+            return self.ha_trees[attributeIndex][2*cluterIndex].getIndex((x - c1) / (c2 - c1))
         if c2 < x and x < c3:
-            return HaTree(self.fmc[attibuteIndex][2*cluterIndex+1]).getIndex((c3 - x) / (c3 - c2))
+            return self.ha_trees[attributeIndex][2*cluterIndex+1].getIndex((c3 - x) / (c3 - c2))
 
-    def do_thuoc_set(self, x, s, C, attibute):
+    def do_thuoc_set(self, x, s, C, attribute):  
         if s == 0:
-            return self.do_thuoc(x, 0, C[0], C[1], s, attibute)
+            return self.do_thuoc(x, 0, C[0], C[1], s, attribute)
         if s == cf.k_mean - 1:
-            return self.do_thuoc(x, C[s - 1], C[s], 100, s, attibute)
-        return self.do_thuoc(x, C[s-1], C[s], C[s+1], s, attibute)
+            return self.do_thuoc(x, C[s - 1], C[s], 100, s, attribute)
+        return self.do_thuoc(x, C[s-1], C[s], C[s+1], s, attribute)
 
     def predict(self, t, r): # t la ban ghi
         arr = [ [self.do_thuoc_set(t[i+1], rule[i+1], self.cluster[i], i) for i in range(self.num_properties)] for rule in r]
@@ -50,40 +51,23 @@ class Predict:
         }
     def num_corrects(self):
         corrects = 0
-        print("------- Starting... -------")
         now = time.time()
         for ix, record in enumerate(self.data):
             if int(record[0]) == self.predict(record, self.rules)["predict"]:
                 corrects += 1
-        print("Correct: {}, Total: {}, Accuracy: {:.2f}%".format(corrects, len(self.data), 100*corrects / len(self.data)))
-        print("------- Predict time: {:.2f} s -------".format(time.time() - now))
+        print("  Correct: {}, Total: {}, Accuracy: {:.2f}%, Time: {:.2f} s".format(corrects, len(self.data), 100*corrects / len(self.data), time.time() - now))
         return corrects
-# read data
-data = csv.read_file(cf.full_path, 'float')
-clusters = csv.read_file(cf.clusters_path, 'float')
-rules = csv.read_file(cf.rule_path, 'float')
-edit = csv.read_file(cf.editFmc_path, 'float')
 
-fmc = csv.read_file(cf.fmc_path, 'float')
-x = Predict(data, clusters, rules, fmc)
-correct = x.num_corrects()
+if __name__ == "__main__":
+    # read data
+    data = csv.read_file(cf.train_path, 'float')
+    clusters = csv.read_file(cf.clusters_path, 'float')
+    rules = csv.read_file(cf.rule_path, 'float')
+    edit = csv.read_file(cf.editFmc_path, 'float')
 
-for attr, flase, u_fasle, true, u_true in edit:
-    
     fmc = csv.read_file(cf.fmc_path, 'float')
     x = Predict(data, clusters, rules, fmc)
-    
-    if true > flase:
-        fmc[attr][2*true] = u_true/u_fasle*fmc[attr][2*true - 1]
-    else:
-        fmc[attr][2*true + 1] = u_true/u_fasle*fmc[attr][2*true + 2]
-    y = x.num_corrects()
-    if correct <= y:
-        print("Edited")
-        correct = y
-        csv.write_file(cf.fmc_path, fmc)
-    else:
-        print("Reject Edited")
-    
-
+    print('\n')
+    correct = x.num_corrects()
+    print('\n')
 

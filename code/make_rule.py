@@ -1,5 +1,5 @@
 import config as cf
-import csv_processor as csv
+import code.csv_processor as csv
 
 class Rule:
     def __init__(self, data, cluster):
@@ -75,10 +75,11 @@ class Rule:
         _rules.sort(key=SortByClass)
         return _rules
 
-# read data
-data = csv.read_file(cf.full_path, 'float')
-clusters = csv.read_file(cf.clusters_path, 'float')
+if __name__ == "__main__":
+    # read data
+    data = csv.read_file(cf.train_path, 'float')
+    clusters = csv.read_file(cf.clusters_path, 'float')
 
-# clustering and save
-x = Rule(data, clusters)
-csv.write_file(cf.rule_path, x.colection_rules())
+    # make_rule and save
+    x = Rule(data, clusters)
+    csv.write_file(cf.rule_path, x.colection_rules())

@@ -1,5 +1,5 @@
 import config as cf
-import csv_processor as csv
+import code.csv_processor as csv
 
 class Clustering:
     def __init__(self, data):
@@ -44,9 +44,11 @@ class Clustering:
             result = result and abs(old[i] - new[i]) < self.e_fcm
         return result
 
-# read data
-data = csv.read_file(cf.full_path, 'float')
 
-# clustering and save
-clusters  = Clustering(data).clusters
-csv.write_file(cf.clusters_path, clusters)
+if __name__ == "__main__":
+# read data
+    data = csv.read_file(cf.train_path, 'float')
+
+    # clustering and save
+    clusters  = Clustering(data).clusters
+    csv.write_file(cf.clusters_path, clusters)
