@@ -29,8 +29,8 @@ class Clustering:
         for i in range(len(self.data)):
             for j in range(self.k_mean):
                 xi = self.data[i][x]
-                mau = sum([(abs(xi - c[j]) / abs( xi - c[k]) )** power for k in range(self.k_mean)])
-                u[i][j] = 1/mau
+                mau = sum([(abs(xi - c[j]) / abs( 0.00001 if xi - c[k] == 0 else xi - c[k]) )** power for k in range(self.k_mean)])
+                u[i][j] = 1/( 0.00001 if mau == 0 else mau)
 
     def step3(self, x, c, u):
         for j in range(self.k_mean):

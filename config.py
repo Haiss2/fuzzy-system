@@ -19,4 +19,7 @@ num_rules = 400
 
 # fixed 4 gia tu: V, M, P, L
 ha_tree_deep = 3
+
+# cross validation iterators
+k_fold = 3
    
