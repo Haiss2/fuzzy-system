@@ -10,7 +10,7 @@ import ha_predict
 from sklearn.model_selection import KFold
 import numpy as np
 
-def predict(data, slug):
+def predict(data):
     now = time.time()
     x = Predict(data, clusters, rules)
 
@@ -26,8 +26,7 @@ def predict(data, slug):
             cr_rules = x.get_rule_truth(record)["rule"]
             edit += x.detect_cluster(pr_rules, cr_rules, record[1: len(record) ])
             
-    print('\n  __{} >> Predict time: {:.2f}s'.format(slug, time.time() - now))
-    print("  __Correct: {}, Total: {}, Accuracy: {:.2f}%\n".format(corrects, len(data), 100*corrects / len(data)))
+    return  100*corrects / len(data)
 
 def train_func(data):
     now = time.time()
@@ -73,6 +72,8 @@ def train_func(data):
     x = ha_predict.Predict(data, clusters, rules, fmc)
     correct = x.num_corrects()
 
+    train_old = correct*100/len(data)
+
     for attr, flase, u_fasle, true, u_true in edit:
         
         fmc = csv.read_file(cf.fmc_path, 'float')        
@@ -83,22 +84,22 @@ def train_func(data):
         
         x = ha_predict.Predict(data, clusters, rules, fmc)
         y = x.num_corrects()
-        if correct <= y:
+        if correct < y:
             print("  -----> edited", (attr, flase, u_fasle, true, u_true ), "\n")
             correct = y
             csv.write_file(cf.fmc_path, fmc)
         else: 
             print("  -----> rejected", (attr, flase, u_fasle, true, u_true ), "\n")
-
-    print(" Best Accuracy: {:.3f}%\n".format(correct*100/len(data)))
-    print('\n  __Predict time: {:.2f}s'.format(time.time() - now))
+    
+    print("  Time: {:.2f}s\n  T1FS Train Accuracy: {:.3f}%\n  HA_T2FS Accuracy: {:.3f}%".format(time.time() - now, train_old, correct*100/len(data)))
+    return train_old, correct*100/len(data)
 
 if __name__ == "__main__":
 
     # read data
     data = csv.read_file(cf.full_path, 'float')
 
-    kf = KFold(n_splits=cf.k_fold, shuffle=False)
+    kf = KFold(n_splits=cf.k_fold, shuffle=cf.shuffle)
     
     result_data = [1 for i in range(cf.num_classes) ]
     for i in range(cf.num_classes):
@@ -107,7 +108,14 @@ if __name__ == "__main__":
             if j[0] == i+1: data_class.append(j)
         result_data[i] = (data_class, list(kf.split(data_class)))
     
+    train_result = []
+    train_result_old = []
+    test_result = []
+    test_result_old = []
+
+    
     for i in range(cf.k_fold):
+        print("Fold {}/{} ".format(i+1,cf.k_fold))
         train = []
         test = []
         for j in range(cf.num_classes):
@@ -119,18 +127,27 @@ if __name__ == "__main__":
             for test_ids in result_data[j][1][i][1]:
                 test.append(data_class[test_ids])
         
-        train_func(train)
+        train_old, train_new = train_func(train)
+        train_result.append(train_new)
+        train_result_old.append(train_old)
+
         # read data
         clusters = csv.read_file(cf.clusters_path, 'float')
         rules = csv.read_file(cf.rule_path, 'float')
         fmc = csv.read_file(cf.fmc_path, 'float')
 
-        predict(test, "Test Data")
-        
-        x = ha_predict.Predict(test, clusters, rules, fmc)
-        print('\n  Test Data >>')
-        correct = x.num_corrects()
-        print('\n')
+        test_old = predict(test)
+        print("  T1FS Test Accuracy: {:.3f}%".format(test_old))
+        test_new = ha_predict.Predict(test, clusters, rules, fmc).num_corrects(isPrint=0)
+        print("  HA_T2FS Test Accuracy: {:.3f}% \n".format(100*test_new/len(test)))
+        test_result.append(100*test_new/len(test))
+        test_result_old.append(test_old)
 
+    print('Result')
+    print('  T1FS Training Accuracy: {:.3f}%'.format(sum(train_result_old)/len(train_result_old)))
+    print('  T1FS Testing Accuracy: {:.3f}%'.format(sum(test_result_old)/len(test_result_old)))
+    print('  HA_T2FS Training Accuracy: {:.3f}%'.format(sum(train_result)/len(train_result)))
+    print('  HA_T2FS Testing Accuracy: {:.3f}%'.format(sum(test_result)/len(test_result)))
 
+    
     

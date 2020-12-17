@@ -49,13 +49,14 @@ class Predict:
             "rule_id": id,
             "rule": r[id][1: self.num_properties +1]
         }
-    def num_corrects(self):
+    def num_corrects(self, isPrint=1):
         corrects = 0
         now = time.time()
         for ix, record in enumerate(self.data):
             if int(record[0]) == self.predict(record, self.rules)["predict"]:
                 corrects += 1
-        print("  Correct: {}, Total: {}, Accuracy: {:.2f}%, Time: {:.2f} s".format(corrects, len(self.data), 100*corrects / len(self.data), time.time() - now))
+        if isPrint:
+            print("  Correct: {}, Total: {}, Accuracy: {:.2f}%, Time: {:.2f} s".format(corrects, len(self.data), 100*corrects / len(self.data), time.time() - now))
         return corrects
 
 if __name__ == "__main__":

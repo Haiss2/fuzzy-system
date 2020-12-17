@@ -8,7 +8,7 @@ from code.predict import Predict
 from sklearn.model_selection import KFold
 import numpy as np
 
-def predict(data, slug):
+def predict(data):
     now = time.time()
     x = Predict(data, clusters, rules)
 
@@ -23,8 +23,9 @@ def predict(data, slug):
             pr_rules = x.predict(record, rules)["rule"]
             cr_rules = x.get_rule_truth(record)["rule"]
             edit += x.detect_cluster(pr_rules, cr_rules, record[1: len(record) ])
-    print('\n  __{} >> Predict time: {:.2f}s'.format(slug, time.time() - now))
-    print("  __Correct: {}, Total: {}, Accuracy: {:.2f}%\n".format(corrects, len(data), 100*corrects / len(data)))
+    print(' Testing Time: {:.2f}s'.format(time.time() - now))
+    print(" Correct: {}, Total: {}, Accuracy: {:.2f}%\n".format(corrects, len(data), 100*corrects / len(data)))
+    return 100*corrects / len(data)
 
 def train_func(data):
     now = time.time()
@@ -51,24 +52,29 @@ def train_func(data):
             pr_rules = x.predict(record, rules)["rule"]
             cr_rules = x.get_rule_truth(record)["rule"]
             edit += x.detect_cluster(pr_rules, cr_rules, record[1: len(record) ])
-    print('\n  __Predict time: {:.2f}s'.format(time.time() - now))
-    print("\n  __Correct: {}, Total: {}, Accuracy: {:.2f}%\n".format(corrects, len(data), 100*corrects / len(data)))
+    print(' Training Time: {:.2f}s'.format(time.time() - now))
+    print(" Correct: {}, Total: {}, Accuracy: {:.2f}%".format(corrects, len(data), 100*corrects / len(data)))
+    return 100*corrects / len(data)
 
 if __name__ == "__main__":
 
     # read data
     data = csv.read_file(cf.full_path, 'float')
 
-    kf = KFold(n_splits=cf.k_fold, shuffle=False)
+    kf = KFold(n_splits=cf.k_fold, shuffle=cf.shuffle)
     
     result_data = [1 for i in range(cf.num_classes) ]
+
     for i in range(cf.num_classes):
         data_class = []
         for j in data:
             if j[0] == i+1: data_class.append(j)
         result_data[i] = (data_class, list(kf.split(data_class)))
     
+    x = []
+    y = []
     for i in range(cf.k_fold):
+        print("Fold {}/{} ".format(i+1,cf.k_fold))
         train = []
         test = []
         for j in range(cf.num_classes):
@@ -80,9 +86,12 @@ if __name__ == "__main__":
             for test_ids in result_data[j][1][i][1]:
                 test.append(data_class[test_ids])
         
-        train_func(train)
+        x.append(train_func(train))
         # read data
-        predict(test, "Test Data")
+        clusters = csv.read_file(cf.clusters_path, 'float')
+        rules = csv.read_file(cf.rule_path, 'float')
+        y.append(predict(test))
 
-
-    
+    print('Result')
+    print(' Training Accuracy: {:.3f}%'.format(sum(x)/len(x)))
+    print(' Testing Accuracy: {:.3f}%'.format(sum(y)/len(y)))
