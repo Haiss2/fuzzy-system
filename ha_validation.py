@@ -84,7 +84,7 @@ def train_func(data):
         
         x = ha_predict.Predict(data, clusters, rules, fmc)
         y = x.num_corrects()
-        if correct < y:
+        if correct <= y:
             print("  -----> edited", (attr, flase, u_fasle, true, u_true ), "\n")
             correct = y
             csv.write_file(cf.fmc_path, fmc)
